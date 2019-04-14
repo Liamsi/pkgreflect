@@ -8,7 +8,7 @@ Command line usage:
 	protogenerat0r --help
 	protogenerat0r [-notypes][-nofuncs][-novars][-unexported][-norecurs][-gofile=filename.go] [DIR_NAME]
 
-If -norecurs is not set, then protogenerat0r traverses recursively into sub-directories.
+protogenerat0r traverses recursively into sub-directories.
 If no DIR_NAME is given, then the current directory is used as root.
 */
 package main
@@ -78,6 +78,8 @@ func parseDir(dir string) {
 			`import (
 	"os"
 
+	// we use dedis' protobuf library to generate proto files from go-structs
+	// see: https://github.com/dedis/protobuf#generating-proto-files
 	"github.com/dedis/protobuf"
 )
 
@@ -109,7 +111,9 @@ func parseDir(dir string) {
 		//
 
 		_, _ = fmt.Fprintln(&buf, `
+// Call this method to generate protobuf messages: 
 func GenerateProtos() {
+	// see: https://github.com/dedis/protobuf#generating-proto-files
 	protobuf.GenerateProtobufDefinition(os.Stdout, structTypes, nil, nil)
 }`)
 
@@ -150,6 +154,7 @@ func printTypeLine(w io.Writer, pkg *ast.Package, kind ast.ObjKind, format strin
 			if object.Kind == kind && (ast.IsExported(name)) {
 				isStruct := reflect.TypeOf(object.Decl.(*ast.TypeSpec).Type) == reflect.TypeOf(&ast.StructType{})
 				if isStruct {
+					// currently we only list plain structs
 					names = append(names, name)
 				} else {
 					fmt.Printf("%s, %#v\n", name, object.Decl.(*ast.TypeSpec).Type)
